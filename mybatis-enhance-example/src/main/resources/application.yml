@@ -12,7 +12,7 @@ spring:
 mybatis:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: cus.mybatis.enhance.example.entity
-#  mapperPackages: cus.mybatis.enhance.example.mapper
+  mapperPackages: cus.mybatis.enhance.example.mapper
   configuration:
      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
      mapUnderscoreToCamelCase: true

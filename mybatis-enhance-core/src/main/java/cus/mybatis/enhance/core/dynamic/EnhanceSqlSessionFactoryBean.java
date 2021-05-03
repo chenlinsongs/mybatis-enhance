@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -23,14 +21,15 @@ import cus.mybatis.enhance.core.utils.OperateXMLByDOM;
 import javax.persistence.Table;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
@@ -47,27 +46,12 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
     }
 
     @Override
-    public void setMapperLocations(Resource[] mapperLocations) {
-        List<Resource> resource = getEntityMapperResource();
-        if (mapperLocations == null)
-            mapperLocations = new Resource[0];
-        Resource[] resources = new Resource[mapperLocations.length +resource.size()];
-        if (resource != null && resource.size() > 0){
-            for(int i= 0;i < resource.size();i++){
-                resources[i]= resource.get(i);
-            }
-        }
-        int base = 0;
-        if (resource != null)
-            base = resource.size();
-
-        for(int i=0;i < mapperLocations.length;i++){
-            resources[i+base]= mapperLocations[i];
-        }
-        super.setMapperLocations(resources);
+    public void setMapperLocations(Resource[] xmlMapperResource) {
+        List<Resource> resource = getEntityMapperResource(xmlMapperResource);
+        super.setMapperLocations(resource.toArray(new Resource[resource.size()]));
     }
 
-    private List<Resource> getEntityMapperResource(){
+    private List<Resource> getEntityMapperResource(Resource[] xmlMapperResource){
         Reflections reflections = new Reflections(searchLocation);
         Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(MyBatisDao.class);
         List<Resource> resources = new ArrayList<>();
@@ -81,15 +65,26 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
                 if (CommonMapper.class.isAssignableFrom(clazz)){
                     if (logger.isInfoEnabled())
                         logger.info("init dao:"+clazz.getName()+" "+(i++));
-                    Resource resource = getMapper4Class(clazz);
+                    ResourceWrap resourceWrap = getNodeList(clazz.getName(),xmlMapperResource);
+                    if (reflections != null){
+                        xmlMapperResource[resourceWrap.getResourceIndex()] = null;
+                    }
+                    Resource resource = getMapper4Class(clazz,resourceWrap.getNodeList());
                     resources.add(resource);
                 }
             }
+            for (int k = 0; k < xmlMapperResource.length;k++){
+                if (xmlMapperResource[k] != null){
+                    resources.add(xmlMapperResource[k]);
+                }
+            }
+        }else {
+            resources = Arrays.asList(xmlMapperResource);
         }
         return resources;
     }
 
-    private Resource getMapper4Class(Class dao){
+    private Resource getMapper4Class(Class dao,NodeList nodeList){
         Resource resource = new ClassPathResource(commonMapperXmlPath);
         try {
             Type[] daoTypes = dao.getGenericInterfaces();
@@ -113,15 +108,44 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
             Document document = createDocument(new InputSource(resource.getInputStream()));
             updateNamespace(document,dao);
             updateSelect(document,entity);
+            if (nodeList != null){
+                insertNodeList(document,nodeList);
+            }
             Table table = (Table) entity.getAnnotation(Table.class);
             String tableName = table.name();
             String xmlDoc = OperateXMLByDOM.doc2FormatString(document);
             String tableReplace = xmlDoc.replaceAll("\\$\\{table}",tableName);
             resource = new InputStreamResource(new ByteArrayInputStream(tableReplace.getBytes("UTF-8")),dao.getName());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("",e);
         }
         return resource;
+    }
+
+
+    private ResourceWrap getNodeList(String namespace, Resource[] xmlMapperResource){
+
+        for (int i = 0;i < xmlMapperResource.length; i++){
+            Resource resource = xmlMapperResource[i];
+            if (resource != null){
+                try {
+                    Document document = createDocument(new InputSource(resource.getInputStream()));
+                    NodeList mapperNode = document.getElementsByTagName("mapper");
+                    NamedNodeMap arrMap = mapperNode.item(0).getAttributes();
+                    if (namespace.equals(arrMap.getNamedItem("namespace").getNodeValue())){
+                        if (mapperNode.item(0).hasChildNodes()){
+                            return new ResourceWrap(mapperNode.item(0).getChildNodes(),resource,i);
+                        }else {
+                            //xml文件中并没有sql语句的情况
+                            return new ResourceWrap(null,resource,i);
+                        }
+                    }
+                } catch (IOException e) {
+                    logger.error("",e);
+                }
+            }
+        }
+        return null;
     }
 
     private Document createDocument(InputSource inputSource) {
@@ -177,4 +201,57 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
         }
     }
 
+    private void insertNodeList(Document doc,NodeList nodeList) {
+        NodeList mapper = doc.getElementsByTagName("mapper");
+        Element sqlContent = (Element) mapper.item(0);
+        adoptNode(doc,sqlContent,nodeList);
+    }
+
+    private void adoptNode(Document doc, Node parent,NodeList nodeList){
+        if (nodeList == null){
+            return;
+        }
+        for (int i = 0;i < nodeList.getLength(); i++){
+            Node node = nodeList.item(i);
+            Node cloneNode = node.cloneNode(true);
+            Node adoptNode =  doc.adoptNode(cloneNode);
+            parent.appendChild(adoptNode);
+        }
+    }
+
+    /**
+     * 将node转为string
+     * */
+    private String nodeListToString(NodeList nodeList) throws TransformerException {
+
+        if (nodeList == null){
+            return "";
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0;i < nodeList.getLength(); i++){
+            Node node = nodeList.item(i);
+            NodeList childList = node.getChildNodes();
+            String value = nodeToString(node,true);
+            stringBuilder.append(value);
+            nodeListToString(childList);
+        }
+        return stringBuilder.toString();
+    }
+
+    private String nodeToString(Node node,boolean omitXMLDeclaration){
+        if (node == null){
+            return "";
+        }
+
+        final StringWriter writer = new StringWriter();
+        try {
+            final Transformer t = TransformerFactory.newInstance().newTransformer();
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, omitXMLDeclaration ? "yes" : "no");
+            t.setOutputProperty(OutputKeys.INDENT, "yes"); // indent to show results in a more human readable format
+            t.transform(new DOMSource(node), new StreamResult(writer));
+        } catch(final TransformerException e) {
+            logger.error("",e);
+        }
+        return writer.toString();
+    }
 }

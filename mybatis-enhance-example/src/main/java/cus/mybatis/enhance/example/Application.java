@@ -16,5 +16,6 @@ public class Application {
         ConfigurableApplicationContext context = new SpringApplication(Application.class).run(args);
         ActivityEnhanceExampleMapper activityEnhanceMapper = context.getBean(ActivityEnhanceExampleMapper.class);
         activityEnhanceMapper.selectByPrimaryKey(1);
+        System.out.println("_____:"+activityEnhanceMapper.get().toString());
     }
 }
