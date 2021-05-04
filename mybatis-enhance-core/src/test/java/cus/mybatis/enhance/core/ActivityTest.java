@@ -67,5 +67,93 @@ public class ActivityTest {
         logger.info("+++++:"+activities.toString());
     }
 
+    @Test
+    public void insertTest(){
+        Activity activity = new Activity();
+        activity.setId(3);
+        activity.setName("23");
+        activityEnhanceMapper.insert(activity);
+        System.out.println();
+
+    }
+
+    @Test
+    public void insertSelectiveTest(){
+        Activity activity = new Activity();
+        activity.setName("23");
+        activityEnhanceMapper.insertSelective(activity);
+        System.out.println();
+    }
+
+    @Test
+    public void updateSelectiveByExampleTest(){
+        Activity activity = new Activity();
+        activity.setName("23999");
+        Example<Activity> example = new Example(Activity.class);
+        example.createCriteria().andEqualTo(Activity::getId,"4");
+
+        activityEnhanceMapper.updateByExampleSelective(activity,example);
+        System.out.println();
+    }
+
+    @Test
+    public void countByExampleTest(){
+        Example<Activity> example = new Example(Activity.class);
+        example.createCriteria().andEqualTo(Activity::getId,"4");
+
+        long count = activityEnhanceMapper.countByExample(example);
+        System.out.println("count:"+count);
+    }
+
+    @Test
+    public void deleteByPrimaryKeyTest(){
+       int row = activityEnhanceMapper.deleteByPrimaryKey(4);
+       assert row == 1;
+    }
+
+    @Test
+    public void deleteByExampleKeyTest(){
+        Example<Activity> example = new Example(Activity.class);
+        example.createCriteria().andEqualTo(Activity::getName,"23");
+        long row = activityEnhanceMapper.deleteByExample(example);
+    }
+
+    @Test
+    public void selectByExampleKeyTest(){
+        Example<Activity> example = new Example(Activity.class);
+//        example.createCriteria().andEqualTo(Activity::getName,"244");
+        example.setOrderByClause("id desc");
+        List<Activity> activities = activityEnhanceMapper.selectByExample(example);
+        System.out.println("++:"+activities.toString());
+    }
+
+    @Test
+    public void updateByExampleSqlTest(){
+        Example<Activity> example = new Example(Activity.class);
+        example.createCriteria().andEqualTo(Activity::getId,"3");
+
+        Activity activity = new Activity();
+        activity.setId(3);
+        activity.setName("abc");
+        activityEnhanceMapper.updateByExample(activity,example);
+    }
+
+    @Test
+    public void updateByPrimarySelectiveSqlTest(){
+        Activity activity = new Activity();
+        activity.setId(3);
+        activity.setName("abc1234");
+        activityEnhanceMapper.updateByPrimaryKeySelective(activity);
+    }
+
+    @Test
+    public void updateByPrimaryKeySqlTest(){
+        Activity activity = new Activity();
+        activity.setId(3);
+//        activity.setName("abc123445");
+        activityEnhanceMapper.updateByPrimaryKey(activity);
+    }
+
+
 
 }

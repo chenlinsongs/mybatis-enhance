@@ -1,5 +1,7 @@
 package cus.mybatis.enhance.core.annotaion;
 
+import org.springframework.stereotype.Component;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -12,6 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
-public @interface Primary {
+@Component
+public @interface Primary{
     String name();
 }

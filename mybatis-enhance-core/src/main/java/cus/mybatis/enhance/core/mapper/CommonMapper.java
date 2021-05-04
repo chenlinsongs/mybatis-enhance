@@ -15,21 +15,21 @@ public interface CommonMapper<P,T>{
 
     long deleteByExample(Example example);
 
-    int deleteByPrimaryKey(P id);
+    int deleteByPrimaryKey(@Param("primaryValue")P id);
 
-    int insert(Object object);
+    int insert(T object);
 
-    int insertSelective(Object record);
+    int insertSelective(T record);
 
     List<T> selectByExample(Example example);
 
-    T selectByPrimaryKey(P id);
+    T selectByPrimaryKey(@Param("primaryValue")P id);
 
-    int updateByExampleSelective(@Param("record") Object record, @Param("example") Example example);
+    int updateByExampleSelective(@Param("record") T record, @Param("example") Example example);
 
-    int updateByExample(@Param("record") Object record, @Param("example") Example example);
+    int updateByExample(@Param("record") T record, @Param("example") Example example);
 
-    int updateByPrimaryKeySelective(Object record);
+    int updateByPrimaryKeySelective(T record);
 
-    int updateByPrimaryKey(Object record);
+    int updateByPrimaryKey(T record);
 }

@@ -93,11 +93,6 @@
         </foreach>
     </insert>
 
-    <select id="selectMybatis" resultType="entity">
-        select * from mybatis_test
-    </select>
-
-
     <update id="updateByExampleSelective" parameterType="map">
         update ${table}
         <set>
