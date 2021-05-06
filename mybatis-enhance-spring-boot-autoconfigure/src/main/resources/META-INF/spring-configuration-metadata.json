@@ -1,10 +1,11 @@
 {
   "hints": [
     {
-      "sourceType": "cus.mybatis.enhance.core.autoconfigure.EnhanceMybatisProperties",
+      "sourceType": "cus.mybatis.enhance.autoconfigure.EnhanceMybatisProperties",
       "name": "mybatis.mapperPackages",
       "description": "mybatis mapper search location.",
-      "type": "java.lang.String"
+      "type": "java.lang.String",
+      "sourceMethod": "getMapperPackages()"
     }
   ]
 }
