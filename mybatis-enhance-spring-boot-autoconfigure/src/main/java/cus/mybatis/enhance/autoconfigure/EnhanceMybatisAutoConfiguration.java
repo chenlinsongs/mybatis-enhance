@@ -1,5 +1,6 @@
-package cus.mybatis.enhance.core.autoconfigure;
+package cus.mybatis.enhance.autoconfigure;
 
+import cus.mybatis.enhance.core.dynamic.EnhanceSqlSessionFactoryBean;
 import org.apache.ibatis.mapping.DatabaseIdProvider;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.scripting.LanguageDriver;
@@ -25,7 +26,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
-import cus.mybatis.enhance.core.dynamic.EnhanceSqlSessionFactoryBean;
 
 import javax.sql.DataSource;
 import java.beans.PropertyDescriptor;

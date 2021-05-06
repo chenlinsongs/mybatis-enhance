@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-cus.mybatis.enhance.core.autoconfigure.EnhanceMybatisAutoConfiguration

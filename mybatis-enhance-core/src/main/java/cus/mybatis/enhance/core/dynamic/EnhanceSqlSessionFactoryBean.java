@@ -152,7 +152,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
                 throw new RuntimeException("没有找到抽象接口");
             }
             MapperClassInfoWrap mapperClassInfoWrap = getMapperClassInfoWrap(mapper,entity);
-            String xmlFileContent = createMapperXmlFile(mapperClassInfoWrap);
+            String xmlFileContent = createMapperXmlFile(mapperClassInfoWrap,nodeList);
 
            return new InputStreamResource(new ByteArrayInputStream(xmlFileContent.getBytes("UTF-8")),mapper.getName());
         } catch (IOException e) {
@@ -196,7 +196,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
     }
 
 
-    private String createMapperXmlFile(MapperClassInfoWrap mapperClassInfoWrap){
+    private String createMapperXmlFile(MapperClassInfoWrap mapperClassInfoWrap,NodeList nodeList){
         Class mapper = mapperClassInfoWrap.getMapper();
         String space = "  ";
         String twoNewLine = "\r\n\n";
@@ -222,16 +222,16 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
         builder.append(createInsertSelectiveSql(mapperClassInfoWrap,space));
 
         //3.updateByExample
-        builder.append(getUpdateByExampleSql(mapperClassInfoWrap));
         builder.append(twoNewLine);
+        builder.append(getUpdateByExampleSql(mapperClassInfoWrap));
 
         //4.updateByExampleSelective
         builder.append(twoNewLine);
         builder.append(getUpdateByExampleSelectiveSql(mapperClassInfoWrap));
 
         //5.updateByPrimaryKey
-        builder.append(getUpdateByPrimaryKeySql(mapperClassInfoWrap));
         builder.append(twoNewLine);
+        builder.append(getUpdateByPrimaryKeySql(mapperClassInfoWrap));
 
         //6.updateByPrimarySelective
         builder.append(twoNewLine);
@@ -258,6 +258,15 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
         builder.append(getSelectByPrimaryKeySql(mapperClassInfoWrap));
 
         builder.append(twoNewLine);
+        if (nodeList != null){
+            String customSql = nodeListToString(nodeList);
+            if (logger.isDebugEnabled()){
+                logger.debug("mapper:{},customSql:{}",mapperClassInfoWrap.getMapper().getName(),customSql);
+            }
+            builder.append(customSql);
+            builder.append(twoNewLine);
+        }
+
         builder.append("</mapper>");
         logger.info("{}",builder.toString());
         return builder.toString();
@@ -802,7 +811,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
     /**
      * 将node转为string
      * */
-    private String nodeListToString(NodeList nodeList) throws TransformerException {
+    private String nodeListToString(NodeList nodeList) {
 
         if (nodeList == null){
             return "";

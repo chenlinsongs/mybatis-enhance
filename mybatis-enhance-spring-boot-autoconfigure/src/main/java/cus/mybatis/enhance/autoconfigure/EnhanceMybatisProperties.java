@@ -1,4 +1,4 @@
-package cus.mybatis.enhance.core.autoconfigure;
+package cus.mybatis.enhance.autoconfigure;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

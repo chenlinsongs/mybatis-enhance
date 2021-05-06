@@ -1,9 +1,9 @@
-package cus.mybatis.enhance.core;
+package cus.mybatis.enhance.autoconfigure;
 
+import cus.mybatis.enhance.autoconfigure.entity.Activity;
+import cus.mybatis.enhance.autoconfigure.mapper.ActivityEnhanceMapper;
+import cus.mybatis.enhance.autoconfigure.mapper.ActivityMapper;
 import cus.mybatis.enhance.core.criteria.Example;
-import cus.mybatis.enhance.core.entity.Activity;
-import cus.mybatis.enhance.core.mapper.ActivityEnhanceMapper;
-import cus.mybatis.enhance.core.mapper.ActivityMapper;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,12 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
-@MapperScan(value = "cus.mybatis.enhance.core.mapper")
+@MapperScan(value = "cus.mybatis.enhance.autoconfigure.mapper")
 @SpringBootTest(classes = {Application.class})
 public class ActivityTest {
 

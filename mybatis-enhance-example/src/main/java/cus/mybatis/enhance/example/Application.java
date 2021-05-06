@@ -10,8 +10,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 @SpringBootApplication()
 public class Application {
 
-
-
     public static void main(String[] args) {
         ConfigurableApplicationContext context = new SpringApplication(Application.class).run(args);
         ActivityEnhanceExampleMapper activityEnhanceMapper = context.getBean(ActivityEnhanceExampleMapper.class);

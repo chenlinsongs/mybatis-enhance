@@ -11,7 +11,17 @@
     <modules>
         <module>mybatis-enhance-core</module>
         <module>mybatis-enhance-example</module>
+        <module>mybatis-enhance-spring-boot-autoconfigure</module>
+        <module>mybatis-enhance-spring-boot-starter</module>
     </modules>
+
+    <properties>
+        <mybatis.version>3.5.3</mybatis.version>
+        <mybatis-spring-autoconfigure.version>2.1.1</mybatis-spring-autoconfigure.version>
+        <mybatis-spring.version>2.0.3</mybatis-spring.version>
+        <spring-boot.version>2.1.9.RELEASE</spring-boot.version>
+    </properties>
+
 
     <dependencyManagement>
         <dependencies>
@@ -22,27 +32,41 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter</artifactId>
-                <version>2.2.6.RELEASE</version>
+                <groupId>cus.mybatis</groupId>
+                <artifactId>mybatis-enhance-spring-boot-autoconfigure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>cus.mybatis</groupId>
+                <artifactId>mybatis-enhance-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>${mybatis-spring.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-configuration-processor</artifactId>
-                <version>2.2.6.RELEASE</version>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-tx</artifactId>
-                <version>5.2.5.RELEASE</version>
-            </dependency>
-
+            <!--mybatis spring boot autoconfigure,mybatis-enhance-spring-boot-autoconfigure项目会依赖-->
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>
-                <artifactId>mybatis-spring-boot-starter</artifactId>
-                <version>2.1.1</version>
+                <artifactId>mybatis-spring-boot-autoconfigure</artifactId>
+                <version>${mybatis-spring-autoconfigure.version}</version>
             </dependency>
 
             <dependency>
@@ -55,13 +79,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.11</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-test</artifactId>
-                <version>2.0.8.RELEASE</version>
-                <scope>test</scope>
             </dependency>
 
         </dependencies>

@@ -1,4 +1,4 @@
-package cus.mybatis.enhance.core;
+package cus.mybatis.enhance.autoconfigure;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;

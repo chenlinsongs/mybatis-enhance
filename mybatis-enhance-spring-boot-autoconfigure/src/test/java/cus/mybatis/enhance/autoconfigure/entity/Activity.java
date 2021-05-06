@@ -1,4 +1,4 @@
-package cus.mybatis.enhance.core.entity;
+package cus.mybatis.enhance.autoconfigure.entity;
 
 import cus.mybatis.enhance.core.annotaion.Primary;
 
