@@ -3,6 +3,7 @@ package cus.mybatis.enhance.core.dynamic;
 
 import cus.mybatis.enhance.core.annotaion.Primary;
 import cus.mybatis.enhance.core.mapper.CommonMapper;
+import cus.mybatis.enhance.core.utils.OperateXMLByDOM;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.ibatis.builder.BuilderException;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -17,14 +18,15 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-import cus.mybatis.enhance.core.annotaion.MyBatisDao;
-import cus.mybatis.enhance.core.utils.OperateXMLByDOM;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
@@ -37,17 +39,14 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 
-public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
+public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
 
     Logger logger = LoggerFactory.getLogger(EnhanceSqlSessionFactoryBean.class);
 
-    private String searchLocation;
+    Set<Class> mapperClass;
 
-    private String commonMapperXmlPath;
-
-    public EnhanceSqlSessionFactoryBean(String searchLocation, String commonMapperXmlPath) {
-        this.searchLocation = searchLocation;
-        this.commonMapperXmlPath = commonMapperXmlPath;
+    public EnhanceSqlSessionFactoryBean(Set<Class> mapperClass) {
+        this.mapperClass = mapperClass;
     }
 
     @Override
@@ -57,8 +56,9 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
     }
 
     private List<Resource> getEntityMapperResource(Resource[] xmlMapperResource){
-        Reflections reflections = new Reflections(searchLocation);
-        Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(MyBatisDao.class);
+//        Reflections reflections = new Reflections(searchLocation);
+//        Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(MyBatisDao.class);
+        Set<Class> annotated = this.mapperClass;
         List<Resource> resources = new ArrayList<>();
         if (annotated !=null && annotated.size() > 0){
             Iterator iterator = annotated.iterator();
@@ -89,45 +89,6 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
             resources = Arrays.asList(xmlMapperResource);
         }
         return resources;
-    }
-
-    private Resource getMapper4Class(Class dao,NodeList nodeList){
-        Resource resource = new ClassPathResource(commonMapperXmlPath);
-        try {
-            Type[] daoTypes = dao.getGenericInterfaces();
-            Class entity = null;
-            if (daoTypes != null && daoTypes.length > 0){
-                for (Type type:daoTypes) {
-                    if (type instanceof ParameterizedType) {
-                        ParameterizedType parameterizedType = (ParameterizedType) type;
-                        //返回表示此类型实际类型参数的 Type 对象的数组
-                        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-                        if (actualTypeArguments !=null && actualTypeArguments.length == 2){
-                            entity = (Class) actualTypeArguments[1];
-                        }else {
-                            throw new RuntimeException("设置的泛型不对");
-                        }
-                    }
-                }
-            }else {
-                throw new RuntimeException("没有找到抽象接口");
-            }
-            Document document = createDocument(new InputSource(resource.getInputStream()));
-            updateNamespace(document,dao);
-            updateSelect(document,entity);
-            if (nodeList != null){
-                insertNodeList(document,nodeList);
-            }
-            Table table = (Table) entity.getAnnotation(Table.class);
-            String tableName = table.name();
-            String xmlDoc = OperateXMLByDOM.doc2FormatString(document);
-
-            String tableReplace = xmlDoc.replaceAll("\\$\\{table}",tableName);
-            resource = new InputStreamResource(new ByteArrayInputStream(tableReplace.getBytes("UTF-8")),dao.getName());
-        } catch (IOException e) {
-            logger.error("",e);
-        }
-        return resource;
     }
 
     private Resource getMapperFromClass(Class mapper,NodeList nodeList){
@@ -843,4 +804,5 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean {
         }
         return writer.toString();
     }
+
 }

@@ -149,9 +149,19 @@ public class ActivityTest {
     public void updateByPrimaryKeySqlTest(){
         Activity activity = new Activity();
         activity.setId(3);
-//        activity.setName("abc123445");
+        activity.setName("abc123445");
         activityEnhanceMapper.updateByPrimaryKey(activity);
     }
+
+    @Test
+    public void customSqlTest(){
+       List<Activity> activities = activityEnhanceMapper.get();
+       if (activities != null){
+           logger.info(activities.toString());
+       }
+    }
+
+
 
 
 

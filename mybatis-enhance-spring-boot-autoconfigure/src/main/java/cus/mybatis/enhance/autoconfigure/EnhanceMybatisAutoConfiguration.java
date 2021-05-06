@@ -1,6 +1,7 @@
 package cus.mybatis.enhance.autoconfigure;
 
 import cus.mybatis.enhance.core.dynamic.EnhanceSqlSessionFactoryBean;
+import cus.mybatis.enhance.core.mapper.CommonMapper;
 import org.apache.ibatis.mapping.DatabaseIdProvider;
 import org.apache.ibatis.plugin.Interceptor;
 import org.apache.ibatis.scripting.LanguageDriver;
@@ -8,19 +9,37 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.type.TypeHandler;
 import org.mybatis.spring.SqlSessionFactoryBean;
+import org.mybatis.spring.annotation.MapperScannerRegistrar;
 import org.mybatis.spring.boot.autoconfigure.*;
+import org.mybatis.spring.mapper.MapperFactoryBean;
+import org.mybatis.spring.mapper.MapperScannerConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnSingleCandidate;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.Assert;
@@ -29,6 +48,7 @@ import org.springframework.util.ObjectUtils;
 
 import javax.sql.DataSource;
 import java.beans.PropertyDescriptor;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,16 +58,13 @@ import java.util.stream.Stream;
 @ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })
 @ConditionalOnSingleCandidate(DataSource.class)
 @EnableConfigurationProperties({MybatisProperties.class, EnhanceMybatisProperties.class})
-
-@AutoConfigureAfter({ DataSourceAutoConfiguration.class, MybatisLanguageDriverAutoConfiguration.class })
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, MybatisLanguageDriverAutoConfiguration.class, MapperScannerConfigurer.class })
 @AutoConfigureBefore({MybatisAutoConfiguration.class})
-public class EnhanceMybatisAutoConfiguration implements InitializingBean {
+public class EnhanceMybatisAutoConfiguration implements InitializingBean, ApplicationContextAware {
 
     Logger logger = LoggerFactory.getLogger(EnhanceMybatisAutoConfiguration.class);
 
     private final MybatisProperties properties;
-
-    private final EnhanceMybatisProperties enhanceProperties;
 
     private final Interceptor[] interceptors;
 
@@ -61,12 +78,13 @@ public class EnhanceMybatisAutoConfiguration implements InitializingBean {
 
     private final List<ConfigurationCustomizer> configurationCustomizers;
 
-    public EnhanceMybatisAutoConfiguration(MybatisProperties properties, EnhanceMybatisProperties enhanceProperties,
+    ApplicationContext applicationContext;
+
+    public EnhanceMybatisAutoConfiguration(MybatisProperties properties,
                                            ObjectProvider<Interceptor[]> interceptorsProvider, ObjectProvider<TypeHandler[]> typeHandlersProvider,
                                            ObjectProvider<LanguageDriver[]> languageDriversProvider, ResourceLoader resourceLoader,
                                            ObjectProvider<DatabaseIdProvider> databaseIdProvider, ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider) {
         this.properties = properties;
-        this.enhanceProperties = enhanceProperties;
         this.interceptors = interceptorsProvider.getIfAvailable();
         this.typeHandlers = typeHandlersProvider.getIfAvailable();
         this.languageDrivers = languageDriversProvider.getIfAvailable();
@@ -79,7 +97,6 @@ public class EnhanceMybatisAutoConfiguration implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         checkConfigFileExists();
-        checkMapperBasePackage();
     }
 
     private void checkConfigFileExists() {
@@ -90,14 +107,10 @@ public class EnhanceMybatisAutoConfiguration implements InitializingBean {
         }
     }
 
-    private void checkMapperBasePackage(){
-        Assert.notNull(this.enhanceProperties.getMapperPackages(),"mybatis.mapperPackages的值不能为空，必须设置mapper接口的路径");
-    }
-
     @Bean
     public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
-        SqlSessionFactoryBean factory = new EnhanceSqlSessionFactoryBean(enhanceProperties.getMapperPackages(),
-                "/template/template.xml");
+
+        SqlSessionFactoryBean factory = new EnhanceSqlSessionFactoryBean(getMapperClass());
         factory.setDataSource(dataSource);
         factory.setVfs(SpringBootVFS.class);
         if (org.springframework.util.StringUtils.hasText(this.properties.getConfigLocation())) {
@@ -160,4 +173,28 @@ public class EnhanceMybatisAutoConfiguration implements InitializingBean {
         factory.setConfiguration(configuration);
     }
 
+    private Set<Class> getMapperClass() throws ClassNotFoundException {
+        String[] allBeanNames = applicationContext.getBeanDefinitionNames();
+        Set<Class> mapperClass = new HashSet<>();
+        for(String beanName : allBeanNames) {
+            GenericApplicationContext genericApplicationContext = (GenericApplicationContext) applicationContext;
+            BeanDefinition beanDefinition = genericApplicationContext.getBeanDefinition(beanName);
+            if (beanDefinition instanceof GenericBeanDefinition){
+                GenericBeanDefinition genericBeanDefinition = (GenericBeanDefinition) beanDefinition;
+                if ("org.mybatis.spring.mapper.MapperFactoryBean".equals(genericBeanDefinition.getBeanClassName())){
+                    String mapperClassName = (String) genericBeanDefinition.getConstructorArgumentValues().getGenericArgumentValues().get(0).getValue();
+                    mapperClass.add(Class.forName(mapperClassName));
+                }
+            }
+        }
+        return mapperClass;
+    }
+
+
+
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+       this.applicationContext = applicationContext;
+    }
 }
