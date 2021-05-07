@@ -3,14 +3,11 @@ package cus.mybatis.enhance.core.dynamic;
 
 import cus.mybatis.enhance.core.annotaion.Primary;
 import cus.mybatis.enhance.core.mapper.CommonMapper;
-import cus.mybatis.enhance.core.utils.OperateXMLByDOM;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.ibatis.builder.BuilderException;
 import org.mybatis.spring.SqlSessionFactoryBean;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.w3c.dom.*;
@@ -227,9 +224,10 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
             builder.append(customSql);
             builder.append(twoNewLine);
         }
-
         builder.append("</mapper>");
-        logger.info("{}",builder.toString());
+        if (logger.isDebugEnabled()){
+            logger.debug("mapper:{},customSql:{}",mapperClassInfoWrap.getMapper().getName(),builder.toString());
+        }
         return builder.toString();
     }
 
@@ -360,7 +358,6 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
 
         builder.append(margin);
         builder.append("</insert>");
-        logger.info("{}",builder.toString());
         return builder.toString();
     }
 

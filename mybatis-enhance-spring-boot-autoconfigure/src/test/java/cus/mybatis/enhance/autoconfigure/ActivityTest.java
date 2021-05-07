@@ -154,11 +154,16 @@ public class ActivityTest {
     }
 
     @Test
-    public void customSqlTest(){
+    public void customGetSqlTest(){
        List<Activity> activities = activityEnhanceMapper.get();
        if (activities != null){
            logger.info(activities.toString());
        }
+    }
+
+    @Test
+    public void customUpdateSqlTest(){
+        activityEnhanceMapper.updateById(3);
     }
 
 

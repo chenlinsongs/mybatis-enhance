@@ -6,4 +6,8 @@
         SELECT * from activity
     </select>
 
+    <update id="updateById">
+        update activity set name = '123' where id = #{id}
+    </update>
+
 </mapper>
