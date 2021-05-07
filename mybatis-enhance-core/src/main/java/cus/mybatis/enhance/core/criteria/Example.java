@@ -1,7 +1,7 @@
 package cus.mybatis.enhance.core.criteria;
 
 
-import cus.mybatis.enhance.core.annotaion.Primary;
+import cus.mybatis.enhance.core.annotation.Primary;
 import cus.mybatis.enhance.core.lambda.IGetter;
 import cus.mybatis.enhance.core.page.Page;
 import cus.mybatis.enhance.core.utils.BeanUtils;

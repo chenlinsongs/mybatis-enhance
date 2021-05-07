@@ -1,6 +1,6 @@
 package cus.mybatis.enhance.example.mapper;
 
-import cus.mybatis.enhance.example.entity.ActivityExample;
+import cus.mybatis.enhance.example.entity.Activity;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -8,6 +8,6 @@ import java.util.List;
 @Repository
 public interface ActivityExampleMapper {
 
-    List<ActivityExample> get();
+    List<Activity> get();
 
 }

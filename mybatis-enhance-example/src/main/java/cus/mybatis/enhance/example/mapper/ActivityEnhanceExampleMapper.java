@@ -1,12 +1,12 @@
 package cus.mybatis.enhance.example.mapper;
 
-import cus.mybatis.enhance.core.annotaion.MyBatisDao;
 import cus.mybatis.enhance.core.mapper.CommonMapper;
-import cus.mybatis.enhance.example.entity.ActivityExample;
+import cus.mybatis.enhance.example.entity.Activity;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-@MyBatisDao
-public interface ActivityEnhanceExampleMapper extends CommonMapper<Integer, ActivityExample> {
-    List<ActivityExample> get();
+@Repository
+public interface ActivityEnhanceExampleMapper extends CommonMapper<Integer, Activity> {
+    List<Activity> get();
 }

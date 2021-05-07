@@ -1,6 +1,6 @@
 package cus.mybatis.enhance.autoconfigure.entity;
 
-import cus.mybatis.enhance.core.annotaion.Primary;
+import cus.mybatis.enhance.core.annotation.Primary;
 
 import javax.persistence.Column;
 import javax.persistence.Table;

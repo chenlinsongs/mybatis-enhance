@@ -1,7 +1,7 @@
 /**
  * Copyright &copy; 2012-2016 <a href="https://github.com/thinkgem/jeesite">JeeSite</a> All rights reserved.
  */
-package cus.mybatis.enhance.core.annotaion;
+package cus.mybatis.enhance.core.annotation;
 
 import org.springframework.stereotype.Component;
 

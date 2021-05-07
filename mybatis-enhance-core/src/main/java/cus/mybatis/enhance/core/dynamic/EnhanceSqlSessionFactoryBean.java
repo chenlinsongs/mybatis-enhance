@@ -1,7 +1,7 @@
 package cus.mybatis.enhance.core.dynamic;
 
 
-import cus.mybatis.enhance.core.annotaion.Primary;
+import cus.mybatis.enhance.core.annotation.Primary;
 import cus.mybatis.enhance.core.mapper.CommonMapper;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.ibatis.builder.BuilderException;
@@ -53,8 +53,6 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
     }
 
     private List<Resource> getEntityMapperResource(Resource[] xmlMapperResource){
-//        Reflections reflections = new Reflections(searchLocation);
-//        Set<Class<?>> annotated = reflections.getTypesAnnotatedWith(MyBatisDao.class);
         Set<Class> annotated = this.mapperClass;
         List<Resource> resources = new ArrayList<>();
         if (annotated !=null && annotated.size() > 0){
@@ -122,32 +120,48 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
     private MapperClassInfoWrap getMapperClassInfoWrap(Class mapper,Class entity){
         List<Field> fields =  FieldUtils.getAllFieldsList(entity);
 
+        //获取表字段和主键
         PrimaryWrap primaryWrap = null;
         List<FieldWrap> fieldWrapList = new ArrayList();
         for (Field field:fields){
             String columnName = null;
             Class<? extends Annotation> annotationCls = null;
-            String property = null;
-            if (field.getAnnotation(Column.class) != null){
-                Column column = field.getAnnotation(Column.class);
-                columnName = column.name();
-                property = field.getName();
-                annotationCls = Column.class;
-            }if (field.getAnnotation(Primary.class) != null){
+            String property = field.getName();
+
+            if (field.getAnnotation(Primary.class) != null || "id".equals(property)){
                 Primary column = field.getAnnotation(Primary.class);
-                columnName = column.name();
-                property = field.getName();
+                if (column != null){
+                    columnName = column.name();
+                }else {
+                    columnName = "id";
+                }
                 primaryWrap = new PrimaryWrap(property,columnName);
                 annotationCls = Primary.class;
+            } else {
+                if (field.getAnnotation(Column.class) != null){
+                    Column column = field.getAnnotation(Column.class);
+                    columnName = column.name();
+                }
+                annotationCls = Column.class;
             }
 
             FieldWrap wrap = new FieldWrap(property,columnName,annotationCls);
             fieldWrapList.add(wrap);
         }
 
-        Table table = (Table) entity.getAnnotation(Table.class);
-        String classSimpleName = table.getClass().getSimpleName();
-        TableWrap tableWrap = new TableWrap(classSimpleName,table.name());
+        //获取主键,如果主键没有用Primary标识，默认主键为id
+        if (primaryWrap == null){
+            throw new RuntimeException("实体类："+entity.getName()+",没有设置主键，默认主键字段名称为id，如果没有id字段，请用cus.mybatis.enhance.core.annotation.Primary注解标识主键");
+        }
+
+        //获取table名称
+        String classSimpleName = entity.getSimpleName();
+        String tableName = null;
+        if (entity.getAnnotation(Table.class) != null){
+            Table table = (Table) entity.getAnnotation(Table.class);
+            tableName = table.name();
+        }
+        TableWrap tableWrap = new TableWrap(classSimpleName,tableName);
 
         MapperClassInfoWrap classInfoWrap = new MapperClassInfoWrap(tableWrap,primaryWrap,fieldWrapList,entity,mapper);
         return classInfoWrap;
@@ -310,7 +324,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
         StringBuilder builder = new StringBuilder();
         builder.append(margin+"<insert");
         builder.append(oneSpace+"id=\"insert\"");
-        builder.append(oneSpace+"keyColumn=\""+primaryWrap.getColumn()+"\"");
+        builder.append(oneSpace+"keyColumn=\""+getColumn(primaryWrap)+"\"");
         builder.append(oneSpace+"keyProperty=\""+primaryWrap.getProperty()+"\"");
         builder.append(oneSpace+"parameterType=\""+entity.getName()+"\"");
         builder.append(oneSpace+"useGeneratedKeys=\"true\"");
@@ -320,12 +334,12 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
 
         String childMargin = margin+towSpace;
 
-        builder.append(childMargin+"insert into "+tableWrap.getTableName()+" (");
+        builder.append(childMargin+"insert into "+getTableName(tableWrap)+" (");
         builder.append(newLine);
         for (int i = 0;i < fieldWrapList.size();i++){
             FieldWrap fieldWrap = fieldWrapList.get(i);
             builder.append(childMargin);
-            builder.append("`"+fieldWrap.getColumn()+"`");
+            builder.append("`"+getColumn(fieldWrap)+"`");
             if (i < fieldWrapList.size()-1){
                 builder.append(",");
             }
@@ -381,10 +395,10 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "    </trim>\n" +
                 "  </insert>\n";
 
-        String keyColumn = primaryWrap.getColumn();
+        String keyColumn = getColumn(primaryWrap);
         String keyProperty = primaryWrap.getProperty();
         String parameterType = entity.getName();
-        String tableName = tableWrap.getTableName();
+        String tableName = getTableName(tableWrap);
 
         String insertSelectiveColumns = getSelectiveColumns(fieldWrapList,false);
         String insertSelectiveValues = getSelectiveColumns(fieldWrapList,true);
@@ -416,7 +430,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
             if (isValue){
                 insertSelectiveColumns.append("#{"+fieldWrap.getProperty()+"}");
             }else {
-                insertSelectiveColumns.append(fieldWrap.getColumn());
+                insertSelectiveColumns.append(getColumn(fieldWrap));
             }
             insertSelectiveColumns.append(",");
             insertSelectiveColumns.append(newLine);
@@ -445,9 +459,8 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "    </if>\n" +
                 "  </update>";
 
-        String tableName = tableWrap.getTableName();
         String updateSelectiveColumnAndValues = getUpdateSelectiveColumnAndValues(fieldWrapList);
-        return  String.format(updateSelectiveSqlTemplate,tableName,updateSelectiveColumnAndValues);
+        return  String.format(updateSelectiveSqlTemplate,getTableName(tableWrap),updateSelectiveColumnAndValues);
 
     }
 
@@ -462,7 +475,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
             sqlFragment.append("<if test=\"record."+fieldWrap.getProperty()+" != null\">");
             sqlFragment.append(newLine);
             sqlFragment.append(sixSpace);
-            sqlFragment.append(fieldWrap.getColumn()+" = #{record."+fieldWrap.getProperty()+"}");
+            sqlFragment.append(getColumn(fieldWrap)+" = #{record."+fieldWrap.getProperty()+"}");
             sqlFragment.append(",");
             sqlFragment.append(newLine);
             sqlFragment.append(fourSpace);
@@ -484,8 +497,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "            <include refid=\"Example_Where_Clause\" />\n" +
                 "        </if>\n" +
                 "    </select>";
-
-        return  String.format(countByExampleSqlTemplate, tableWrap.getTableName());
+        return  String.format(countByExampleSqlTemplate, getTableName(tableWrap));
     }
 
     /**
@@ -499,8 +511,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "        delete from %s\n" +
                 "        where %s = #{primaryValue}\n" +
                 "    </delete>";
-
-        return  String.format(deleteByPrimaryKeySqlTemplate,tableWrap.getTableName(),primaryWrap.getColumn());
+        return  String.format(deleteByPrimaryKeySqlTemplate,getTableName(tableWrap),getColumn(primaryWrap));
     }
 
     /**
@@ -516,7 +527,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "        </if>\n" +
                 "    </delete>";
 
-        return  String.format(deleteByExampleSqlTemplate,tableWrap.getTableName());
+        return  String.format(deleteByExampleSqlTemplate,getTableName(tableWrap));
     }
 
     /**
@@ -536,7 +547,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "        </if>\n" +
                 "    </select>";
 
-        return  String.format(selectByExampleSql,entity.getName(),tableWrap.getTableName());
+        return  String.format(selectByExampleSql,entity.getName(),getTableName(tableWrap));
     }
 
     /**
@@ -551,7 +562,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "        select * from %s\n" +
                 "        where %s = #{primaryValue}\n" +
                 "    </select>";
-        return  String.format(sql,entity.getName(),tableWrap.getTableName(),primaryWrap.getColumn());
+        return  String.format(sql,entity.getName(),getTableName(tableWrap),getColumn(primaryWrap));
     }
 
     /**
@@ -571,7 +582,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "        </if>\n" +
                 "    </update>";
         String sqlFragment = getUpdateColumns(fieldWrapList);
-        return String.format(sql,tableWrap.getTableName(),sqlFragment);
+        return String.format(sql,getTableName(tableWrap),sqlFragment);
     }
 
     private String getUpdateColumns(List<FieldWrap> fieldWrapList){
@@ -581,7 +592,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
         for (int i = 0;i < fieldWrapList.size();i++){
             FieldWrap fieldWrap = fieldWrapList.get(i);
             sqlFragment.append(elevenSpace);
-            sqlFragment.append(fieldWrap.getColumn()+" = #{record."+fieldWrap.getProperty()+"}");
+            sqlFragment.append(getColumn(fieldWrap)+" = #{record."+fieldWrap.getProperty()+"}");
             sqlFragment.append(",");
             sqlFragment.append(newLine);
         }
@@ -605,7 +616,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "    </update>";
 
         String sqlFragment = getUpdateByPrimarySelectiveColumnAndValues(fieldWrapList);
-        return String.format(sql,tableWrap.getTableName(),sqlFragment,primaryWrap.getColumn(),primaryWrap.getProperty());
+        return String.format(sql,getTableName(tableWrap),sqlFragment,getColumn(primaryWrap),primaryWrap.getProperty());
     }
 
 
@@ -624,7 +635,7 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
             sqlFragment.append("<if test=\""+fieldWrap.getProperty()+" != null\">");
             sqlFragment.append(newLine);
             sqlFragment.append(sixSpace);
-            sqlFragment.append(fieldWrap.getColumn()+" = #{"+fieldWrap.getProperty()+"}");
+            sqlFragment.append(getColumn(fieldWrap)+" = #{"+fieldWrap.getProperty()+"}");
             sqlFragment.append(",");
             sqlFragment.append(newLine);
             sqlFragment.append(fourSpace);
@@ -649,25 +660,39 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
                 "        where %s = #{%s}\n" +
                 "    </update>";
         String sqlFragment = getUpdateByPrimaryColumns(mapperClassInfoWrap.getFieldWrapList());
-        return String.format(sql,tableWrap.getTableName(),sqlFragment,primaryWrap.getColumn(),primaryWrap.getProperty());
+        return String.format(sql,getTableName(tableWrap),sqlFragment,getColumn(primaryWrap),primaryWrap.getProperty());
     }
 
+    /**
+     *  不包含主键
+     * */
     private String getUpdateByPrimaryColumns(List<FieldWrap> fieldWrapList){
         String newLine = "\r\n";
         String elevenSpace = "           ";
         StringBuilder sqlFragment = new StringBuilder();
         for (int i = 0;i < fieldWrapList.size();i++){
             FieldWrap fieldWrap = fieldWrapList.get(i);
-            //不包含主键
             if (Primary.class.isAssignableFrom(fieldWrap.getAnnotationCls())){
                 continue;
             }
             sqlFragment.append(elevenSpace);
-            sqlFragment.append(fieldWrap.getColumn()+" = #{"+fieldWrap.getProperty()+"}");
+            sqlFragment.append(getColumn(fieldWrap)+" = #{"+fieldWrap.getProperty()+"}");
             sqlFragment.append(",");
             sqlFragment.append(newLine);
         }
         return sqlFragment.toString();
+    }
+
+    private String getTableName(TableWrap tableWrap){
+        return tableWrap.getTableName()!=null?tableWrap.getTableName():camelCaseToUnderscores(tableWrap.getClassName());
+    }
+
+    private String getColumn(PrimaryWrap primaryWrap){
+        return primaryWrap.getColumn()!=null?primaryWrap.getColumn():camelCaseToUnderscores(primaryWrap.getProperty());
+    }
+
+    private String getColumn(FieldWrap fieldWrap){
+        return fieldWrap.getColumn()!=null?fieldWrap.getColumn():camelCaseToUnderscores(fieldWrap.getProperty());
     }
 
     private ResourceWrap getNodeList(String namespace, Resource[] xmlMapperResource){
@@ -800,6 +825,16 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
             logger.error("",e);
         }
         return writer.toString();
+    }
+
+    private String camelCaseToUnderscores(String camel){
+        String underscore;
+        underscore = String.valueOf(Character.toLowerCase(camel.charAt(0)));
+        for (int i = 1; i < camel.length(); i++) {
+            underscore += Character.isLowerCase(camel.charAt(i)) ? String.valueOf(camel.charAt(i))
+                    : "_" + Character.toLowerCase(camel.charAt(i));
+        }
+        return underscore;
     }
 
 }

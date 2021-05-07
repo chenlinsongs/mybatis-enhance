@@ -1,19 +1,21 @@
 package cus.mybatis.enhance.example.entity;
 
-import cus.mybatis.enhance.core.annotaion.Primary;
+import cus.mybatis.enhance.core.annotation.Primary;
 
 import javax.persistence.Column;
 import javax.persistence.Table;
 import java.io.Serializable;
 
-@Table(name = "activity")
-public class ActivityExample implements Serializable {
+//@Table(name = "activity")
+public class Activity implements Serializable {
 
-    @Primary(name = "id")
+//    @Primary(name = "id")
     Integer id;
 
-    @Column(name = "name")
+//    @Column(name = "name")
     String name;
+
+    private String teacherInfo;
 
     public Integer getId() {
         return id;
@@ -31,11 +33,20 @@ public class ActivityExample implements Serializable {
         this.name = name;
     }
 
+    public String getTeacherInfo() {
+        return teacherInfo;
+    }
+
+    public void setTeacherInfo(String teacherInfo) {
+        this.teacherInfo = teacherInfo;
+    }
+
     @Override
     public String toString() {
         return "Activity{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", teacherInfo='" + teacherInfo + '\'' +
                 '}';
     }
 }

@@ -1,4 +1,4 @@
-package cus.mybatis.enhance.core.annotaion;
+package cus.mybatis.enhance.core.annotation;
 
 import org.springframework.stereotype.Component;
 
