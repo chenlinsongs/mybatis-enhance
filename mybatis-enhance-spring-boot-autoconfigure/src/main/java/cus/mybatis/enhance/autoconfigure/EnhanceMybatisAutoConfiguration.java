@@ -138,9 +138,10 @@ public class EnhanceMybatisAutoConfiguration implements InitializingBean, Applic
         if (!ObjectUtils.isEmpty(this.typeHandlers)) {
             factory.setTypeHandlers(this.typeHandlers);
         }
-        if (!ObjectUtils.isEmpty(this.properties.resolveMapperLocations())) {
-            factory.setMapperLocations(this.properties.resolveMapperLocations());
-        }
+        //mybatis-enhance可以完全不需要xml文件
+        Resource[] resources = this.properties.resolveMapperLocations();
+        factory.setMapperLocations(resources!=null?resources:new Resource[]{});
+
         Set<String> factoryPropertyNames = Stream
                 .of(new BeanWrapperImpl(SqlSessionFactoryBean.class).getPropertyDescriptors()).map(PropertyDescriptor::getName)
                 .collect(Collectors.toSet());
