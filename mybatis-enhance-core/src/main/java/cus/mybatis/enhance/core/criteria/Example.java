@@ -3,12 +3,10 @@ package cus.mybatis.enhance.core.criteria;
 
 import cus.mybatis.enhance.core.annotation.Primary;
 import cus.mybatis.enhance.core.lambda.IGetter;
-import cus.mybatis.enhance.core.page.Page;
 import cus.mybatis.enhance.core.utils.BeanUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import cus.mybatis.enhance.core.page.Pageable;
 
 import javax.persistence.Column;
 import java.lang.reflect.Field;
@@ -16,10 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class Example<T> implements Pageable<T> {
+public class Example<T> {
     Logger logger = LoggerFactory.getLogger(Example.class);
 
-    Page<T> page;
     Object clazz;
 
     public Example(Class c)  {
@@ -94,15 +91,6 @@ public class Example<T> implements Pageable<T> {
         orderCriteria.clear();
         orderByClause = null;
         distinct = false;
-    }
-
-    public Page<T> getPage() {
-        return page;
-    }
-
-    public Page<T> setPage(Page<T> page) {
-        this.page = page;
-        return page;
     }
 
     public class Criteria extends GeneratedCriteria {
