@@ -17,31 +17,14 @@ import java.util.List;
 public class Example<T> {
     Logger logger = LoggerFactory.getLogger(Example.class);
 
-    Object clazz;
-
-    public Example(Class c)  {
-        this();
-        String name = c.getName();
-        try {
-            this.clazz = Class.forName(name).newInstance();
-        } catch (InstantiationException e) {
-            logger.error("",e);
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            logger.error("",e);
-        } catch (ClassNotFoundException e) {
-            logger.error("",e);
-        }
-    }
-
     protected String orderByClause;
 
     protected boolean distinct;
 
     protected List<Criteria> orderCriteria;
 
-    private Example() {
-        orderCriteria = new ArrayList<Criteria>();
+    public Example() {
+        orderCriteria = new ArrayList<>();
     }
 
     public void setOrderByClause(String orderByClause) {
@@ -141,104 +124,90 @@ public class Example<T> {
             criteria.add(new Criterion(condition, value1, value2));
         }
 
-        public Criteria andIsNull(IGetter<T> fn) {
+        public Criteria andIsNull(IGetter<? extends T> fn) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " is null");
+            addCriterion(property + " is null");
             return (Criteria) this;
         }
 
-        public Criteria andIsNotNull(IGetter<T> fn) {
+        public Criteria andIsNotNull(IGetter<? extends T> fn) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " is not null");
+            addCriterion(property + " is not null");
             return (Criteria) this;
         }
 
-        public Criteria andEqualTo(IGetter<T> fn, String value) {
+        public Criteria andEqualTo(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " =", value, property);
+            addCriterion(property + " =", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andNotEqualTo(IGetter<T> fn, String value) {
+        public Criteria andNotEqualTo(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " <>", value, property);
+            addCriterion(property + " <>", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andGreaterThan(IGetter<T> fn, String value) {
+        public Criteria andGreaterThan(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " >", value, property);
+            addCriterion(property + " >", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andGreaterThanOrEqualTo(IGetter<T> fn, String value) {
+        public Criteria andGreaterThanOrEqualTo(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " >=", value, property);
+            addCriterion(property + " >=", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andLessThan(IGetter<T> fn, String value) {
+        public Criteria andLessThan(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " <", value, property);
+            addCriterion(property + " <", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andLessThanOrEqualTo(IGetter<T> fn, String value) {
+        public Criteria andLessThanOrEqualTo(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " <=", value, property);
+            addCriterion(property + " <=", value, property);
             return (Criteria) this;
         }
 
         /**
          * value = "%"+condition+"%"
          * */
-        public Criteria andLike(IGetter<T> fn, String value) {
+        public Criteria andLike(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " like", value, property);
+            addCriterion(property + " like", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andNotLike(IGetter<T> fn, String value) {
+        public Criteria andNotLike(IGetter<? extends T> fn, String value) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " not like", value, property);
+            addCriterion(property + " not like", value, property);
             return (Criteria) this;
         }
 
-        public Criteria andIn(IGetter<T> fn, List<String> values) {
+        public Criteria andIn(IGetter<? extends T> fn, List<String> values) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " in", values, property);
+            addCriterion(property + " in", values, property);
             return (Criteria) this;
         }
 
-        public Criteria andNotIn(IGetter<T> fn, List<String> values) {
+        public Criteria andNotIn(IGetter<? extends T> fn, List<String> values) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " not in", values, property);
+            addCriterion(property + " not in", values, property);
             return (Criteria) this;
         }
 
-        public Criteria andBetween(IGetter<T> fn, String value1, String value2) {
+        public Criteria andBetween(IGetter<? extends T> fn, String value1, String value2) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " between", value1, value2, property);
+            addCriterion(property + " between", value1, value2, property);
             return (Criteria) this;
         }
 
-        public Criteria andNotBetween(IGetter<T> fn, String value1, String value2) {
+        public Criteria andNotBetween(IGetter<? extends T> fn, String value1, String value2) {
             String property = BeanUtils.convertToFieldName(fn);
-            String name = getColumnName(property);
-            addCriterion(name + " not between", value1, value2, property);
+            addCriterion(property + " not between", value1, value2, property);
             return (Criteria) this;
         }
 
@@ -329,27 +298,5 @@ public class Example<T> {
         protected Criterion(String condition, Object value, Object secondValue) {
             this(condition, value, secondValue, null);
         }
-    }
-
-
-    public String getColumnName(String property){
-        Field field;
-        field = FieldUtils.getField(clazz.getClass(),property,true);
-        Column column = field.getAnnotation(Column.class);
-        if (column != null){
-            return column.name();
-        }
-        else {
-            Primary primary = field.getAnnotation(Primary.class);
-            return primary.name();
-        }
-    }
-
-    public Object getClazz() {
-        return  clazz;
-    }
-
-    public void setClazz(Object clazz) {
-        this.clazz = clazz;
     }
 }

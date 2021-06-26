@@ -25,7 +25,7 @@ public class BeanUtils {
      * @param fn
      * @return
      */
-    public static <T> String convertToFieldName(IGetter<T> fn) {
+    public static String convertToFieldName(IGetter fn) {
         SerializedLambda lambda = getSerializedLambda(fn);
         String methodName = lambda.getImplMethodName();
         String prefix = null;

@@ -1,5 +1,7 @@
 package cus.mybatis.enhance.example;
 
+import cus.mybatis.enhance.core.criteria.Example;
+import cus.mybatis.enhance.core.lambda.IGetter;
 import cus.mybatis.enhance.example.entity.Activity;
 import cus.mybatis.enhance.example.mapper.ActivityEnhanceExampleMapper;
 import org.mybatis.spring.annotation.MapperScan;
@@ -7,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
+import java.util.Arrays;
 import java.util.List;
 
 @MapperScan(value = "cus.mybatis.enhance.example.mapper")
@@ -30,5 +33,8 @@ public class Application {
         }
         List<Activity> activityExamples = activityEnhanceMapper.get();
         System.out.println("+++++:"+activityExamples.toString());
+
+
+
     }
 }

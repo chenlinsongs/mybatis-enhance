@@ -59,7 +59,7 @@ public class ActivityTest {
 
     @Test
     public void exampleTest(){
-        Example<Activity> example = new Example(Activity.class);
+        Example<Activity> example = new Example();
         example.createCriteria().andEqualTo(Activity::getId,"1");
         List<Activity> activities = activityEnhanceMapper.selectByExample(example);
         activities.stream().map(Activity::getId).collect(Collectors.toList());
@@ -88,7 +88,7 @@ public class ActivityTest {
     public void updateSelectiveByExampleTest(){
         Activity activity = new Activity();
         activity.setName("23999");
-        Example<Activity> example = new Example(Activity.class);
+        Example<Activity> example = new Example();
         example.createCriteria().andEqualTo(Activity::getId,"4");
 
         activityEnhanceMapper.updateByExampleSelective(activity,example);
@@ -97,7 +97,7 @@ public class ActivityTest {
 
     @Test
     public void countByExampleTest(){
-        Example<Activity> example = new Example(Activity.class);
+        Example<Activity> example = new Example();
         example.createCriteria().andEqualTo(Activity::getId,"4");
 
         long count = activityEnhanceMapper.countByExample(example);
@@ -112,14 +112,14 @@ public class ActivityTest {
 
     @Test
     public void deleteByExampleKeyTest(){
-        Example<Activity> example = new Example(Activity.class);
+        Example<Activity> example = new Example();
         example.createCriteria().andEqualTo(Activity::getName,"23");
         long row = activityEnhanceMapper.deleteByExample(example);
     }
 
     @Test
     public void selectByExampleKeyTest(){
-        Example<Activity> example = new Example(Activity.class);
+        Example<Activity> example = new Example();
 //        example.createCriteria().andEqualTo(Activity::getName,"244");
         example.setOrderByClause("id desc");
         List<Activity> activities = activityEnhanceMapper.selectByExample(example);
@@ -128,7 +128,7 @@ public class ActivityTest {
 
     @Test
     public void updateByExampleSqlTest(){
-        Example<Activity> example = new Example(Activity.class);
+        Example<Activity> example = new Example();
         example.createCriteria().andEqualTo(Activity::getId,"3");
 
         Activity activity = new Activity();

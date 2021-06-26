@@ -10,10 +10,10 @@ import java.io.Serializable;
 public class Activity implements Serializable {
 
 //    @Primary(name = "id")
-    Integer id;
+    private Integer id;
 
 //    @Column(name = "name")
-    String name;
+    private String name;
 
     private String teacherInfo;
 
