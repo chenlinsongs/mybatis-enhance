@@ -41,6 +41,15 @@ public class BeanUtils {
         return uncapFirst(substringAfter(methodName, prefix));
     }
 
+    /**
+     * 获取方法所在的类名称
+     * */
+    public static String getImplClassName(IGetter fn){
+        SerializedLambda lambda = getSerializedLambda(fn);
+        String implClassName = lambda.getImplClass();
+        return implClassName.replace('/','.');
+    }
+
     /***
      *Convert setter method reference to property name
      * @param fn

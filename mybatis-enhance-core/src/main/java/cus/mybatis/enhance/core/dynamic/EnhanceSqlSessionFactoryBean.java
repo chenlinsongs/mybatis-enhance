@@ -3,6 +3,7 @@ package cus.mybatis.enhance.core.dynamic;
 
 import cus.mybatis.enhance.core.annotation.Primary;
 import cus.mybatis.enhance.core.mapper.CommonMapper;
+import cus.mybatis.enhance.core.utils.StringUtil;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.ibatis.builder.BuilderException;
 import org.mybatis.spring.SqlSessionFactoryBean;
@@ -684,15 +685,15 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
     }
 
     private String getTableName(TableWrap tableWrap){
-        return tableWrap.getTableName()!=null?tableWrap.getTableName():camelCaseToUnderscores(tableWrap.getClassName());
+        return tableWrap.getTableName()!=null?tableWrap.getTableName(): StringUtil.camelCaseToUnderscores(tableWrap.getClassName());
     }
 
     private String getColumn(PrimaryWrap primaryWrap){
-        return primaryWrap.getColumn()!=null?primaryWrap.getColumn():camelCaseToUnderscores(primaryWrap.getProperty());
+        return primaryWrap.getColumn()!=null?primaryWrap.getColumn():StringUtil.camelCaseToUnderscores(primaryWrap.getProperty());
     }
 
     private String getColumn(FieldWrap fieldWrap){
-        return fieldWrap.getColumn()!=null?fieldWrap.getColumn():camelCaseToUnderscores(fieldWrap.getProperty());
+        return fieldWrap.getColumn()!=null?fieldWrap.getColumn():StringUtil.camelCaseToUnderscores(fieldWrap.getProperty());
     }
 
     private ResourceWrap getNodeList(String namespace, Resource[] xmlMapperResource){
@@ -827,14 +828,6 @@ public class EnhanceSqlSessionFactoryBean extends SqlSessionFactoryBean{
         return writer.toString();
     }
 
-    private String camelCaseToUnderscores(String camel){
-        String underscore;
-        underscore = String.valueOf(Character.toLowerCase(camel.charAt(0)));
-        for (int i = 1; i < camel.length(); i++) {
-            underscore += Character.isLowerCase(camel.charAt(i)) ? String.valueOf(camel.charAt(i))
-                    : "_" + Character.toLowerCase(camel.charAt(i));
-        }
-        return underscore;
-    }
+
 
 }
